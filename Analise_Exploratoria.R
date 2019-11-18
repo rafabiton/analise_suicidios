@@ -69,4 +69,62 @@ suicidios_brasil_idade <- suicidios %>%
 
 # Vamos montar um barplot para visualização dos dados
 ggplot(suicidios_brasil_idade, aes(fill=age, y=total, x=year)) + 
+  ggtitle("Número de Suicídios no Brasil") +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  ylab("Total de Suicídios/idade") +
+  xlab("Ano") +
   geom_bar(position="stack", stat="identity")
+
+
+
+# Dividindo os DataSets em dados do Brasil e dados do mundo, agora por faixa etária
+suicidios_mundo_idade <- suicidios %>%
+  select(year,country, suicides_no, age) %>%
+  filter (suicidios$country != 'Brazil') %>%
+  group_by(year, age) %>%
+  summarise(total = sum(suicides_no)) %>%
+  mutate(pais = "Mundo")
+
+
+# Vamos montar um barplot para visualização dos dados
+ggplot(suicidios_mundo_idade, aes(fill=age, y=total, x=year)) + 
+  ggtitle("Número de Suicídios no Mundo") +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  ylab("Total de Suicídios/idade") +
+  xlab("Ano") +
+  geom_bar(position="stack", stat="identity")
+
+
+# Dividindo os DataSets em dados do Brasil e dados do mundo, agora por Sexo
+suicidios_brasil_sexo <- suicidios %>%
+  select(suicides_no, sex) %>%
+  filter (suicidios$country == 'Brazil') %>%
+  group_by(sex) %>%
+  summarise(total = sum(suicides_no))
+
+# Vamos montar um barplot para visualização dos dados
+??pie
+pie(suicidios_brasil_sexo$total, labels = suicidios_brasil_sexo$sex,
+    edges = 200, radius = 2.8,
+    col = c(suicidios_brasil_sexo$total, suicidios_brasil_sexo$sex),
+    main = "Taxa de Suicídio entre Homens e Mulheres")
+
+
+# Dividindo os DataSets em dados do Brasil e dados do mundo, agora por Sexo
+suicidios_mundo_sexo <- suicidios %>%
+  select(suicides_no, sex) %>%
+  filter (suicidios$country != 'Brazil') %>%
+  group_by(sex) %>%
+  summarise(total = sum(suicides_no))
+
+View(suicidios_mundo_sexo)
+
+# Vamos montar um barplot para visualização dos dados
+pie(suicidios_mundo_sexo$total, labels = suicidios_mundo_sexo$sex,
+    edges = 200, radius = 2.8,
+    col = c(suicidios_mundo_sexo$total, suicidios_mundo_sexo$sex),
+    main = "Taxa de Suicídio entre Homens e Mulheres no Mundo")

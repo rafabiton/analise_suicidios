@@ -5,10 +5,13 @@
 setwd("/Users/rafaelbiton/Google Drive/Cursos/DSA/CIENTISTA_DADOS/10.Experimentos/Suicidio/analise_suicidios")
 getwd()
 
-# carregar a biblioteca dplyr para manipulação dos dados
+# instala a biblioteca GGMAP
+install.packages("ggmap")
+# carregar as bibliotecas necessárias para manipulação dos dados e geração dos plots
 library(dplyr, warn.conflicts = FALSE)
-# carrega a biblioteca ggplot2 para criação dos gráficos
 library(ggplot2)
+library(ggmap)
+
 
 # Inicio da Análise Exploratória de Dados
 
@@ -103,28 +106,49 @@ ggplot(suicidios_mundo_idade, aes(fill=age, y=total, x=year)) +
 suicidios_brasil_sexo <- suicidios %>%
   select(suicides_no, sex) %>%
   filter (suicidios$country == 'Brazil') %>%
+  mutate(sex = ifelse(sex == 'female', 'Feminino',
+                      ifelse(sex == 'male', 'Masculino', 'no')
+  )) %>%
   group_by(sex) %>%
   summarise(total = sum(suicides_no))
 
-# Vamos montar um barplot para visualização dos dados
-??pie
-pie(suicidios_brasil_sexo$total, labels = suicidios_brasil_sexo$sex,
-    edges = 200, radius = 2.8,
-    col = c(suicidios_brasil_sexo$total, suicidios_brasil_sexo$sex),
-    main = "Taxa de Suicídio entre Homens e Mulheres")
+# Vamos montar um pichart para visualização dos dados
+dfbrasil <- data.frame(valor = c(suicidios_brasil_sexo$total),
+                 Group = c(suicidios_brasil_sexo$sex)) %>%
+  mutate(Group = factor(Group, levels = c(suicidios_brasil_sexo$sex)),
+         cumulative = cumsum(valor),
+         midpoint = cumulative - valor / 2,
+         label = paste0(Group, " ", round(valor / sum(valor) * 100, 1), "%"))
+
+ggplot(dfbrasil, aes(x = 1, weight = valor, fill = Group)) +
+  geom_bar(width = 1, position = "stack") +
+  coord_polar(theta = "y") +
+  geom_text(aes(x = 1.3, y = midpoint, label = label)) +
+  theme_nothing()
 
 
 # Dividindo os DataSets em dados do Brasil e dados do mundo, agora por Sexo
 suicidios_mundo_sexo <- suicidios %>%
   select(suicides_no, sex) %>%
   filter (suicidios$country != 'Brazil') %>%
+  mutate(sex = ifelse(sex == 'female', 'Feminino',
+                      ifelse(sex == 'male', 'Masculino', 'no')
+                      )) %>%
   group_by(sex) %>%
   summarise(total = sum(suicides_no))
 
-View(suicidios_mundo_sexo)
 
-# Vamos montar um barplot para visualização dos dados
-pie(suicidios_mundo_sexo$total, labels = suicidios_mundo_sexo$sex,
-    edges = 200, radius = 2.8,
-    col = c(suicidios_mundo_sexo$total, suicidios_mundo_sexo$sex),
-    main = "Taxa de Suicídio entre Homens e Mulheres no Mundo")
+# Vamos montar um piechart para visualização dos dados
+df <- data.frame(valor = c(suicidios_mundo_sexo$total),
+                 Group = c(suicidios_mundo_sexo$sex)) %>%
+  # factor levels need to be the opposite order of the cumulative sum of the values
+  mutate(Group = factor(Group, levels = c(suicidios_mundo_sexo$sex)),
+         cumulative = cumsum(valor),
+         midpoint = cumulative - valor / 2,
+         label = paste0(Group, " ", round(valor / sum(valor) * 100, 1), "%"))
+
+ggplot(df, aes(x = 1, weight = valor, fill = Group)) +
+  geom_bar(width = 1, position = "stack") +
+  coord_polar(theta = "y") +
+  geom_text(aes(x = 1.3, y = midpoint, label = label)) +
+  theme_nothing()
